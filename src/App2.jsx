@@ -105,7 +105,6 @@ function FloatingPlayer() {
     } else {
       playerRef.current.playVideo();
       setPlaying(true);
-      setExpanded(true);
     }
   };
 
