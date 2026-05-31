@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function getMoonPhase(date) {
   const known = new Date(2000, 0, 6);
@@ -44,7 +44,16 @@ const setStorage = (data) => { try { localStorage.setItem("dl_log", JSON.stringi
 
 function FloatingPlayer() {
   const [expanded, setExpanded] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const iframeRef = useRef(null);
   const playerH = expanded ? 300 : 68;
+
+  const handlePlay = () => {
+    setAutoPlay(true);
+    setExpanded(true);
+  };
+
+  const scSrc = `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/1478063758&color=%23a78bfa&auto_play=${autoPlay}&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&show_artwork=false`;
 
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(6,9,18,0.97)",backdropFilter:"blur(20px)",borderTop:"1px solid #a78bfa33",height:playerH,overflow:"hidden",transition:"height .35s cubic-bezier(.4,0,.2,1)",boxShadow:"0 -8px 40px rgba(0,0,0,.7)"}}>
@@ -53,19 +62,23 @@ function FloatingPlayer() {
           🎵
         </div>
         <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
-          <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Meditation Music</div>
-          <div style={{fontSize:10,color:"#475569",marginTop:1}}>ambient · relaxing · meditative</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Ambient Meditation</div>
+          <div style={{fontSize:10,color:"#475569",marginTop:1}}>instrumental · relaxing · no vocals</div>
         </div>
+        <button onClick={handlePlay} style={{width:36,height:36,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#a78bfa,#a78bfa99)",color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:autoPlay?"0 0 14px #a78bfa88":"none",transition:"box-shadow .2s",flexShrink:0}}>
+          ▶
+        </button>
         <div onClick={()=>setExpanded(e=>!e)} style={{color:"#334155",fontSize:14,cursor:"pointer",transform:expanded?"rotate(180deg)":"rotate(0)",transition:"transform .3s"}}>▾</div>
       </div>
       <div style={{padding:"0 16px 16px",height:234}}>
         <iframe
+          ref={iframeRef}
           width="100%"
           height="214"
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
-          src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/209082545&color=%23a78bfa&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&show_artwork=false"
+          src={scSrc}
           style={{borderRadius:12}}
         />
       </div>
