@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 function getMoonPhase(date) {
   const known = new Date(2000, 0, 6);
@@ -33,6 +33,14 @@ const HABITS = [
   { id: "cleaning", label: "15 Min Cleaning",    icon: "🧹", color: "#a78bfa" },
 ];
 
+const TRACKS = [
+  { title: "Beautiful Relaxing Music", artist: "Peder B. Helland", videoId: "2OEL4P1Rz04" },
+  { title: "Deep Relaxing Music", artist: "Peder B. Helland", videoId: "fNh2yB0w8gU" },
+  { title: "Tranquility — Deep Healing", artist: "Eternal Depth", videoId: "DRFHklnN-SM" },
+  { title: "Peaceful Instrumental", artist: "Relax Melodies", videoId: "CcsUYu0PVxY" },
+  { title: "Ambient Space Music", artist: "Calming Ambient", videoId: "VJ3u6zBcVSA" },
+];
+
 function getTodayKey() { return new Date().toISOString().slice(0,10); }
 function getWeekDays() {
   const today = new Date();
@@ -43,44 +51,98 @@ const getStorage = () => { try { return JSON.parse(localStorage.getItem("dl_log"
 const setStorage = (data) => { try { localStorage.setItem("dl_log", JSON.stringify(data)); } catch {} };
 
 function FloatingPlayer() {
+  const [trackIdx, setTrackIdx] = useState(0);
+  const [playing, setPlaying] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [autoPlay, setAutoPlay] = useState(false);
-  const iframeRef = useRef(null);
-  const playerH = expanded ? 300 : 68;
+  const playerRef = useRef(null);
+  const playerReadyRef = useRef(false);
+  const track = TRACKS[trackIdx];
+  const playerH = expanded ? 280 : 68;
 
-  const handlePlay = () => {
-    setAutoPlay(true);
-    setExpanded(true);
+  useEffect(() => {
+    if (!window.YT) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+    }
+    window.onYouTubeIframeAPIReady = () => {
+      playerRef.current = new window.YT.Player("yt-player", {
+        height: "180",
+        width: "100%",
+        videoId: TRACKS[0].videoId,
+        playerVars: { autoplay: 0, controls: 1, rel: 0, modestbranding: 1 },
+        events: {
+          onReady: () => { playerReadyRef.current = true; },
+          onStateChange: (e) => {
+            if (e.data === window.YT.PlayerState.PLAYING) setPlaying(true);
+            if (e.data === window.YT.PlayerState.PAUSED || e.data === window.YT.PlayerState.ENDED) setPlaying(false);
+            if (e.data === window.YT.PlayerState.ENDED) handleNext();
+          },
+        },
+      });
+    };
+    if (window.YT && window.YT.Player) window.onYouTubeIframeAPIReady();
+  }, []);
+
+  const loadTrack = (idx, autoplay = false) => {
+    setTrackIdx(idx);
+    if (playerRef.current && playerReadyRef.current) {
+      if (autoplay) {
+        playerRef.current.loadVideoById(TRACKS[idx].videoId);
+        setPlaying(true);
+      } else {
+        playerRef.current.cueVideoById(TRACKS[idx].videoId);
+        setPlaying(false);
+      }
+    }
   };
 
-  const scSrc = `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/1917422003&color=%23a78bfa&auto_play=${autoPlay}&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&show_artwork=false`;
+  const handlePlay = () => {
+    if (!playerReadyRef.current) return;
+    if (playing) {
+      playerRef.current.pauseVideo();
+      setPlaying(false);
+    } else {
+      playerRef.current.playVideo();
+      setPlaying(true);
+      setExpanded(true);
+    }
+  };
+
+  const handleNext = () => {
+    const next = (trackIdx + 1) % TRACKS.length;
+    loadTrack(next, true);
+  };
+
+  const handlePrev = () => {
+    const prev = (trackIdx - 1 + TRACKS.length) % TRACKS.length;
+    loadTrack(prev, true);
+  };
 
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(6,9,18,0.97)",backdropFilter:"blur(20px)",borderTop:"1px solid #a78bfa33",height:playerH,overflow:"hidden",transition:"height .35s cubic-bezier(.4,0,.2,1)",boxShadow:"0 -8px 40px rgba(0,0,0,.7)"}}>
-      <div style={{height:66,display:"flex",alignItems:"center",gap:12,padding:"0 16px"}}>
-        <div onClick={()=>setExpanded(e=>!e)} style={{width:40,height:40,borderRadius:10,background:"linear-gradient(135deg,#a78bfa44,#a78bfa22)",border:"1px solid #a78bfa55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0,cursor:"pointer"}}>
+      <div style={{height:66,display:"flex",alignItems:"center",gap:10,padding:"0 14px"}}>
+        <div onClick={()=>setExpanded(e=>!e)} style={{width:38,height:38,borderRadius:10,background:"linear-gradient(135deg,#a78bfa44,#a78bfa22)",border:"1px solid #a78bfa55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0,cursor:"pointer"}}>
           🎵
         </div>
         <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
-          <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Ambient Meditation</div>
-          <div style={{fontSize:10,color:"#475569",marginTop:1}}>instrumental · relaxing · no vocals</div>
+          <div style={{fontSize:11,fontWeight:700,color:"#e2e8f0",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{track.title}</div>
+          <div style={{fontSize:10,color:"#475569",marginTop:1}}>{track.artist}</div>
         </div>
-        <button onClick={handlePlay} style={{width:36,height:36,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#a78bfa,#a78bfa99)",color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:autoPlay?"0 0 14px #a78bfa88":"none",transition:"box-shadow .2s",flexShrink:0}}>
-          ▶
+        <button onClick={handlePrev} style={{background:"none",border:"none",color:"#64748b",fontSize:15,cursor:"pointer",padding:"4px",lineHeight:1}}>⏮</button>
+        <button onClick={handlePlay} style={{width:36,height:36,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#a78bfa,#a78bfa99)",color:"#fff",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:playing?"0 0 14px #a78bfa88":"none",transition:"box-shadow .2s",flexShrink:0}}>
+          {playing ? "⏸" : "▶"}
         </button>
+        <button onClick={handleNext} style={{background:"none",border:"none",color:"#64748b",fontSize:15,cursor:"pointer",padding:"4px",lineHeight:1}}>⏭</button>
         <div onClick={()=>setExpanded(e=>!e)} style={{color:"#334155",fontSize:14,cursor:"pointer",transform:expanded?"rotate(180deg)":"rotate(0)",transition:"transform .3s"}}>▾</div>
       </div>
-      <div style={{padding:"0 16px 16px",height:234}}>
-        <iframe
-          ref={iframeRef}
-          width="100%"
-          height="214"
-          scrolling="no"
-          frameBorder="no"
-          allow="autoplay"
-          src={scSrc}
-          style={{borderRadius:12}}
-        />
+      <div style={{padding:"0 14px 14px"}}>
+        <div id="yt-player" style={{borderRadius:12,overflow:"hidden",marginBottom:10}}/>
+        <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:2}}>
+          {TRACKS.map((t,i)=>(
+            <button key={i} onClick={()=>loadTrack(i,true)} style={{flexShrink:0,padding:"5px 10px",borderRadius:20,border:`1px solid ${i===trackIdx?"#a78bfa88":"rgba(255,255,255,.08)"}`,background:i===trackIdx?"#a78bfa22":"rgba(255,255,255,.04)",color:i===trackIdx?"#a78bfa":"#64748b",fontSize:10,fontWeight:i===trackIdx?700:400,cursor:"pointer",whiteSpace:"nowrap"}}>{t.title}</button>
+          ))}
+        </div>
       </div>
     </div>
   );
