@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 function getMoonPhase(date) {
   const known = new Date(2000, 0, 6);
@@ -33,15 +33,6 @@ const HABITS = [
   { id: "cleaning", label: "15 Min Cleaning",    icon: "🧹", color: "#a78bfa" },
 ];
 
-const TRACKS = [
-  { title: "Chill Lofi Study", artist: "Lesfm", url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3", color: "#a78bfa" },
-  { title: "Calm Morning", artist: "FASSounds", url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_270f49c6e5.mp3", color: "#38bdf8" },
-  { title: "Lofi Chill", artist: "Lesfm", url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1fbe.mp3", color: "#f472b6" },
-  { title: "Soft Piano", artist: "Relaxing Music", url: "https://cdn.pixabay.com/download/audio/2021/11/01/audio_cb31e41351.mp3", color: "#34d399" },
-  { title: "Night Ambient", artist: "SoundGallery", url: "https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92c21.mp3", color: "#fbbf24" },
-  { title: "Dreamy Lofi", artist: "Lesfm", url: "https://cdn.pixabay.com/download/audio/2022/10/25/audio_946b4a3e4e.mp3", color: "#fb923c" },
-];
-
 function getTodayKey() { return new Date().toISOString().slice(0,10); }
 function getWeekDays() {
   const today = new Date();
@@ -52,98 +43,33 @@ const getStorage = () => { try { return JSON.parse(localStorage.getItem("dl_log"
 const setStorage = (data) => { try { localStorage.setItem("dl_log", JSON.stringify(data)); } catch {} };
 
 function FloatingPlayer() {
-  const audioRef = useRef(null);
-  const [trackIdx, setTrackIdx] = useState(0);
-  const [playing, setPlaying] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [readyToPlay, setReadyToPlay] = useState(false);
-  const track = TRACKS[trackIdx];
-
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (playing) {
-      audio.pause();
-      setPlaying(false);
-    } else {
-      if (!audio.src || audio.src === window.location.href) {
-        audio.src = TRACKS[trackIdx].url;
-        audio.load();
-      }
-      audio.play()
-        .then(() => { setPlaying(true); setReadyToPlay(false); })
-        .catch(() => setPlaying(false));
-    }
-  };
-
-  const selectTrack = (idx) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.pause();
-    audio.src = TRACKS[idx].url;
-    audio.load();
-    setTrackIdx(idx);
-    setProgress(0);
-    setDuration(0);
-    setPlaying(false);
-    setReadyToPlay(true);
-  };
-
-  const onTimeUpdate = () => { const a = audioRef.current; if (a && a.duration) setProgress(a.currentTime / a.duration); };
-  const onLoadedMetadata = () => { const a = audioRef.current; if (a) setDuration(a.duration); };
-  const onEnded = () => selectTrack((trackIdx + 1) % TRACKS.length);
-
-  const seekTo = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    const audio = audioRef.current;
-    if (audio && audio.duration) { audio.currentTime = pct * audio.duration; setProgress(pct); }
-  };
-
-  const fmtTime = (s) => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
-  const playerH = expanded ? 220 : 68;
+  const playerH = expanded ? 300 : 68;
 
   return (
-    <>
-      <audio ref={audioRef} onTimeUpdate={onTimeUpdate} onLoadedMetadata={onLoadedMetadata} onEnded={onEnded} preload="none" />
-      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(6,9,18,0.97)",backdropFilter:"blur(20px)",borderTop:`1px solid ${track.color}33`,height:playerH,overflow:"hidden",transition:"height .35s cubic-bezier(.4,0,.2,1)",boxShadow:"0 -8px 40px rgba(0,0,0,.7)"}}>
-        <div style={{height:2,background:"#ffffff0a",cursor:"pointer"}} onClick={seekTo}>
-          <div style={{height:"100%",width:`${progress*100}%`,background:`linear-gradient(90deg,${track.color},${track.color}cc)`,transition:"width .1s linear"}}/>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(6,9,18,0.97)",backdropFilter:"blur(20px)",borderTop:"1px solid #a78bfa33",height:playerH,overflow:"hidden",transition:"height .35s cubic-bezier(.4,0,.2,1)",boxShadow:"0 -8px 40px rgba(0,0,0,.7)"}}>
+      <div style={{height:66,display:"flex",alignItems:"center",gap:12,padding:"0 16px"}}>
+        <div onClick={()=>setExpanded(e=>!e)} style={{width:40,height:40,borderRadius:10,background:"linear-gradient(135deg,#a78bfa44,#a78bfa22)",border:"1px solid #a78bfa55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0,cursor:"pointer"}}>
+          🎵
         </div>
-        <div style={{height:66,display:"flex",alignItems:"center",gap:12,padding:"0 16px"}}>
-          <div onClick={()=>setExpanded(e=>!e)} style={{width:40,height:40,borderRadius:10,background:`linear-gradient(135deg,${track.color}44,${track.color}22)`,border:`1px solid ${track.color}55`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0,cursor:"pointer"}}>
-            {playing ? "🎵" : "🎶"}
-          </div>
-          <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
-            <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{track.title}</div>
-            <div style={{fontSize:10,color:readyToPlay?track.color:"#475569",marginTop:1}}>
-              {readyToPlay ? "Tap ▶ to play" : `${track.artist} · royalty-free`}
-            </div>
-          </div>
-          <button onClick={togglePlay} style={{width:38,height:38,borderRadius:"50%",border:"none",cursor:"pointer",background:`linear-gradient(135deg,${track.color},${track.color}99)`,color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:playing?`0 0 14px ${track.color}88`:readyToPlay?`0 0 18px ${track.color}cc`:"none",transition:"box-shadow .2s",flexShrink:0}}>
-            {playing ? "⏸" : "▶"}
-          </button>
-          <div onClick={()=>setExpanded(e=>!e)} style={{color:"#334155",fontSize:14,cursor:"pointer",transform:expanded?"rotate(180deg)":"rotate(0)",transition:"transform .3s"}}>▾</div>
+        <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
+          <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Chillhop Music</div>
+          <div style={{fontSize:10,color:"#475569",marginTop:1}}>lofi hip hop · tap to expand</div>
         </div>
-        <div style={{padding:"0 20px 16px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-            <span style={{fontSize:10,color:"#475569",width:32,textAlign:"right"}}>{fmtTime(progress*duration)}</span>
-            <div style={{flex:1,height:4,background:"#1e293b",borderRadius:99,cursor:"pointer",position:"relative"}} onClick={seekTo}>
-              <div style={{height:"100%",width:`${progress*100}%`,background:`linear-gradient(90deg,${track.color},${track.color}bb)`,borderRadius:99}}/>
-            </div>
-            <span style={{fontSize:10,color:"#475569",width:32}}>{fmtTime(duration)}</span>
-          </div>
-          <div style={{fontSize:10,letterSpacing:2,color:"#475569",textTransform:"uppercase",marginBottom:8}}>Tracks — tap to switch</div>
-          <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:2}}>
-            {TRACKS.map((t,i)=>(
-              <button key={i} onClick={()=>selectTrack(i)} style={{flexShrink:0,padding:"5px 12px",borderRadius:20,border:`1px solid ${i===trackIdx?t.color+"88":"rgba(255,255,255,.08)"}`,background:i===trackIdx?`${t.color}22`:"rgba(255,255,255,.04)",color:i===trackIdx?t.color:"#64748b",fontSize:11,fontWeight:i===trackIdx?700:400,cursor:"pointer",whiteSpace:"nowrap"}}>{t.title}</button>
-            ))}
-          </div>
-        </div>
+        <div onClick={()=>setExpanded(e=>!e)} style={{color:"#334155",fontSize:14,cursor:"pointer",transform:expanded?"rotate(180deg)":"rotate(0)",transition:"transform .3s"}}>▾</div>
       </div>
-    </>
+      <div style={{padding:"0 16px 16px",height:234}}>
+        <iframe
+          width="100%"
+          height="214"
+          scrolling="no"
+          frameBorder="no"
+          allow="autoplay"
+          src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/694408254&color=%23a78bfa&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false"
+          style={{borderRadius:12}}
+        />
+      </div>
+    </div>
   );
 }
 
