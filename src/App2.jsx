@@ -53,7 +53,7 @@ function FloatingPlayer() {
     setExpanded(true);
   };
 
-  const scSrc = `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/1478063758&color=%23a78bfa&auto_play=${autoPlay}&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&show_artwork=false`;
+  const scSrc = `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/1917422003&color=%23a78bfa&auto_play=${autoPlay}&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&show_artwork=false`;
 
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:100,background:"rgba(6,9,18,0.97)",backdropFilter:"blur(20px)",borderTop:"1px solid #a78bfa33",height:playerH,overflow:"hidden",transition:"height .35s cubic-bezier(.4,0,.2,1)",boxShadow:"0 -8px 40px rgba(0,0,0,.7)"}}>
