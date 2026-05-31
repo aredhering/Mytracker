@@ -53,8 +53,8 @@ function FloatingPlayer() {
           🎵
         </div>
         <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>setExpanded(e=>!e)}>
-          <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Chillhop Music</div>
-          <div style={{fontSize:10,color:"#475569",marginTop:1}}>lofi hip hop · tap to expand</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Meditation Music</div>
+          <div style={{fontSize:10,color:"#475569",marginTop:1}}>ambient · relaxing · meditative</div>
         </div>
         <div onClick={()=>setExpanded(e=>!e)} style={{color:"#334155",fontSize:14,cursor:"pointer",transform:expanded?"rotate(180deg)":"rotate(0)",transition:"transform .3s"}}>▾</div>
       </div>
@@ -65,7 +65,7 @@ function FloatingPlayer() {
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
-          src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/694408254&color=%23a78bfa&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false"
+          src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/209082545&color=%23a78bfa&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&show_artwork=false"
           style={{borderRadius:12}}
         />
       </div>
